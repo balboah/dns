@@ -59,10 +59,25 @@ type ResponseWriter interface {
 	Hijack()
 }
 
+// Conner exposes the underlying net.Conn when available.
+type Conner interface {
+	Conn() net.Conn
+}
+
 // A ConnectionStater interface is used by a DNS Handler to access TLS connection state
 // when available.
 type ConnectionStater interface {
 	ConnectionState() *tls.ConnectionState
+}
+
+// A PacketConnStater interface is used by a DNS Handler to access UDP packet state
+// when available.
+type PacketConnStater interface {
+	PacketConnState() *PacketConnState
+}
+
+type PacketConnState struct {
+	OOBDestination net.IP
 }
 
 type response struct {
@@ -853,6 +868,26 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 	if v, ok := w.tcp.(tlsConnectionStater); ok {
 		t := v.ConnectionState()
 		return &t
+	}
+	return nil
+}
+
+// PacketConnState implements PacketConnStater.
+func (w *response) PacketConnState() *PacketConnState {
+	if w.udpSession != nil {
+		return w.udpSession.PacketConnState()
+	}
+	return nil
+}
+
+// Conn exposes the underlying net.Conn when available. Callers should treat the returned
+// connection as read-only and must not close it.
+func (w *response) Conn() net.Conn {
+	if w.tcp != nil {
+		return w.tcp
+	}
+	if c, ok := w.udp.(net.Conn); ok {
+		return c
 	}
 	return nil
 }

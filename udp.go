@@ -54,6 +54,16 @@ func WriteToSessionUDP(conn *net.UDPConn, b []byte, session *SessionUDP) (int, e
 	return n, err
 }
 
+func (s *SessionUDP) PacketConnState() *PacketConnState {
+	if s.context != nil {
+		dst := parseDstFromOOB(s.context)
+		return &PacketConnState{
+			OOBDestination: dst,
+		}
+	}
+	return nil
+}
+
 func setUDPSocketOptions(conn *net.UDPConn) error {
 	// Try setting the flags for both families and ignore the errors unless they
 	// both error.

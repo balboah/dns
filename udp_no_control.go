@@ -18,6 +18,9 @@ type SessionUDP struct {
 // RemoteAddr returns the remote network address.
 func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
 
+// PacketConnState returns nil on platforms without control message support.
+func (s *SessionUDP) PacketConnState() *PacketConnState { return nil }
+
 // ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
 // net.UDPAddr.
 func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {
