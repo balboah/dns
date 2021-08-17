@@ -67,6 +67,16 @@ type ConnectionStater interface {
 	ConnectionState() *tls.ConnectionState
 }
 
+// A UDPConnectionStater interface is used by a DNS Handler to access UDP connection state
+// when available.
+type UDPConnectionStater interface {
+	UDPConnectionState() *UDPConnectionState
+}
+
+type UDPConnectionState struct {
+	OOBDestination net.IP
+}
+
 type response struct {
 	closed         bool // connection has been closed
 	hijacked       bool // connection has been hijacked by handler
@@ -859,6 +869,14 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 	if v, ok := w.tcp.(tlsConnectionStater); ok {
 		t := v.ConnectionState()
 		return &t
+	}
+	return nil
+}
+
+// UDPConnectionState() implements the UDPConnectionStater.UDPConnectionState() interface.
+func (w *response) UDPConnectionState() *UDPConnectionState {
+	if w.udpSession != nil {
+		return w.udpSession.UDPConnectionState()
 	}
 	return nil
 }
